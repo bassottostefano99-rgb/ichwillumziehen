@@ -379,10 +379,16 @@ strong { font-weight: 500; }
 }
 .aff-insp:hover { transform: translateY(-2px); }
 .aff-insp-img {
-  height: 80px; background: var(--bg-card-2);
+  height: 130px; background: var(--bg-card-2);
   display: flex; align-items: center; justify-content: center;
   font-size: 32px; border-bottom: 0.5px solid var(--border);
+  overflow: hidden;
 }
+.aff-insp-img img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  transition: transform 0.4s ease;
+}
+.aff-insp:hover .aff-insp-img img { transform: scale(1.05); }
 .aff-insp-body { padding: 11px 12px; }
 .aff-insp-name { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
 .aff-insp-meta { display: flex; justify-content: space-between; align-items: center; font-size: 11px; }
