@@ -84,6 +84,8 @@ strong { font-weight: 500; }
   padding: 60px 40px 70px; max-width: 980px; margin: 0 auto;
   border-bottom: 0.5px solid #1a1a1a;
 }
+/* Umzugsbudget gets a wider canvas — many cards fit horizontally */
+#umzugsbudget { max-width: 1400px; }
 .section-label {
   font-size: 10px; color: var(--accent-d);
   letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 14px;
@@ -134,6 +136,12 @@ strong { font-weight: 500; }
 .mc-ibox .suf, .mc-xfield .suf {
   position: absolute; right: 14px; bottom: 12px;
   font-size: 13px; color: var(--muted);
+}
+/* Native dropdown options — ensure dark background + readable text */
+.mc-xfield select option,
+.mc-ibox select option {
+  background-color: #161616;
+  color: #f0ede8;
 }
 
 .mc-c2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
@@ -248,7 +256,7 @@ strong { font-weight: 500; }
 .wl-total-value { font-family: var(--serif); font-size: 24px; color: var(--accent); }
 
 .wl-grid {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 12px;
 }
 .wl-card {
