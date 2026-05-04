@@ -56,6 +56,11 @@ async function init() {
 
   renderProfile();
   renderWishlist();
+
+  // Tag amazon links in inspiration cards
+  document.querySelectorAll('[data-aff-amazon]').forEach(a => {
+    a.href = tagAffiliate(a.href, AFFILIATE);
+  });
 }
 
 // ── Format ──────────────────────────────────────────────────────────────────
@@ -276,6 +281,9 @@ function renderResult(listing) {
   `;
   document.getElementById('mc-result').innerHTML = html;
   document.getElementById('mc-result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  // Show Strom-Affiliate card after a result is generated
+  document.querySelector('[data-aff="strom"]').hidden = false;
 }
 
 // ── Wishlist UI ─────────────────────────────────────────────────────────────

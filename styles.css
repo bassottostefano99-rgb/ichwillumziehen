@@ -336,6 +336,51 @@ strong { font-weight: 500; }
 .modal-actions .btn { flex: 1; }
 .modal-status { font-size: 12px; color: var(--accent-d); margin-top: 12px; }
 
+/* === Affiliate Cards === */
+.aff-card {
+  display: flex; align-items: center; gap: 16px;
+  background: var(--bg-card); border: 0.5px solid var(--border);
+  border-radius: 12px; padding: 18px 20px; margin-top: 24px;
+}
+.aff-icon {
+  width: 44px; height: 44px; border-radius: 10px;
+  background: var(--bg-lime); border: 0.5px solid var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; font-size: 20px;
+}
+.aff-body { flex: 1; min-width: 0; }
+.aff-title { font-size: 14px; font-weight: 500; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.aff-tag, .aff-meta { font-size: 9px; color: var(--muted); background: var(--bg); border: 0.5px solid var(--border); padding: 2px 7px; border-radius: 4px; font-weight: 400; letter-spacing: 0.05em; }
+.aff-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+.aff-cta {
+  font-size: 12px; color: var(--accent); flex-shrink: 0;
+  padding: 9px 14px; border: 0.5px solid var(--accent); border-radius: 8px;
+  transition: background 0.15s, color 0.15s;
+}
+.aff-cta:hover { background: var(--accent); color: var(--bg); }
+
+.aff-insp-hint { font-size: 12px; color: var(--muted); margin-top: 24px; margin-bottom: 12px; }
+.aff-insp-meta { color: var(--muted); }
+.aff-insp-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+.aff-insp {
+  background: var(--bg-card); border: 0.5px solid var(--border);
+  border-radius: 11px; overflow: hidden; transition: transform 0.15s;
+}
+.aff-insp:hover { transform: translateY(-2px); }
+.aff-insp-img {
+  height: 80px; background: var(--bg-card-2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px; border-bottom: 0.5px solid var(--border);
+}
+.aff-insp-body { padding: 11px 12px; }
+.aff-insp-name { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+.aff-insp-meta { display: flex; justify-content: space-between; align-items: center; font-size: 11px; }
+.aff-insp-price { font-family: var(--serif); color: var(--accent); font-size: 13px; }
+.aff-insp-tag { color: var(--muted); }
+
 /* === Animations === */
 @keyframes fade-up {
   from { opacity: 0; transform: translateY(8px); }
