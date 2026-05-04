@@ -37,7 +37,9 @@ strong { font-weight: 500; }
   border-bottom: 0.5px solid var(--border);
   backdrop-filter: blur(8px);
 }
-.hdr-logo { font-family: var(--serif); color: var(--accent); font-size: 17px; letter-spacing: 0.04em; }
+.hdr-logo { display: flex; align-items: center; gap: 10px; }
+.hdr-logo-img { width: 28px; height: 28px; display: block; border-radius: 6px; }
+.hdr-logo-text { font-family: var(--serif); color: var(--accent); font-size: 17px; letter-spacing: 0.04em; }
 .hdr-nav { display: flex; gap: 18px; font-size: 13px; color: var(--muted); }
 .hdr-nav a:hover { color: var(--text); }
 .hdr-login {
@@ -329,6 +331,11 @@ strong { font-weight: 500; }
   border: 0.5px solid var(--border); border-radius: 14px;
   background: var(--bg-card); color: var(--text);
   padding: 0; max-width: 380px; width: 90vw;
+  /* Explicit centering — some browsers don't center <dialog> via showModal() reliably */
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
 }
 .modal::backdrop { background: rgba(0,0,0,0.7); }
 .modal-form { padding: 24px; }
