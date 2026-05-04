@@ -6,6 +6,17 @@ import { tagAffiliate, makeAffiliateConfig, isAmazonUrl } from './lib/affiliate.
 import { normalizeItem, addItem, deleteItem, clearAll, calcTotal } from './lib/wishlist.js';
 import { createDefaultProfile, makeProfileStore, makeWishlistStore } from './lib/profile.js';
 
+// Supabase
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+import { makeAuth } from './lib/auth.js';
+import { makeSync } from './lib/sync.js';
+
+const SUPABASE_URL = 'https://bvtmvirboshsyiqknxdd.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ2dG12aXJib3Noc3lpcWtueGRkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5MTI3ODEsImV4cCI6MjA5MzQ4ODc4MX0.XLG_Bkj3RFOZSrtwYjS9inR3oYoBhI8cpONIau-NpP0';
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const auth = makeAuth(supabase);
+
 // ── Config ──────────────────────────────────────────────────────────────────
 const AFFILIATE = makeAffiliateConfig({
   amazonTag: 'PLATZHALTER-21',           // TODO: replace with real Amazon Partnernet tag
@@ -15,6 +26,7 @@ const AFFILIATE = makeAffiliateConfig({
 // ── State ───────────────────────────────────────────────────────────────────
 const profileStore = makeProfileStore({ storage: window.localStorage });
 const wishlistStore = makeWishlistStore({ storage: window.localStorage });
+const sync = makeSync({ supabase, profileStore, wishlistStore });
 
 let cityData = null;
 let profile = profileStore.load() ?? createDefaultProfile();
@@ -31,6 +43,16 @@ async function init() {
   initWishlistUI();
   initAuthUI();
   initFooterCookies();
+
+  await auth.getSession();
+  updateHeaderAuthState();
+  if (auth.isLoggedIn()) {
+    try {
+      const { mergedProfile, mergedItems } = await sync.runOnLogin(auth.getUser().id);
+      if (mergedProfile) profile = mergedProfile;
+      if (mergedItems) wishlist = mergedItems;
+    } catch (err) { console.error(err); }
+  }
 
   renderProfile();
   renderWishlist();
@@ -170,6 +192,7 @@ function toggleEstEdit(cat) {
 
 function persistAndRevalidate() {
   profileStore.save(profile);
+  if (auth.isLoggedIn()) sync.pushProfile(auth.getUser().id, profile).catch(console.error);
   validateNext();
 }
 
@@ -271,6 +294,7 @@ function initWishlistUI() {
       });
       wishlist = addItem(wishlist, item);
       wishlistStore.save(wishlist);
+      if (auth.isLoggedIn()) sync.pushItem(auth.getUser().id, item).catch(console.error);
       form.reset();
       document.getElementById('wl-name').focus();
       renderWishlist();
@@ -323,6 +347,7 @@ function renderWishlist() {
     grid.querySelectorAll('[data-del]').forEach(btn => btn.addEventListener('click', () => {
       wishlist = deleteItem(wishlist, btn.dataset.del);
       wishlistStore.save(wishlist);
+      if (auth.isLoggedIn()) sync.deleteItemRemote(btn.dataset.del).catch(console.error);
       renderWishlist();
     }));
   }
@@ -330,12 +355,72 @@ function renderWishlist() {
   total.textContent = fmtEur(calcTotal(wishlist));
 }
 
-// ── Stubs (filled in later phases) ──────────────────────────────────────────
+// ── Auth UI ─────────────────────────────────────────────────────────────────
 function initAuthUI() {
-  // Phase 2 — auth flow wiring
-  document.getElementById('btn-open-login').addEventListener('click', () => {
-    alert('Login kommt in Phase 2 — aktuell läuft alles lokal im Browser.');
+  const btn = document.getElementById('btn-open-login');
+  const modal = document.getElementById('login-modal');
+  const form = document.getElementById('login-form');
+  const input = document.getElementById('login-email');
+  const status = document.getElementById('login-status');
+  const submit = document.getElementById('login-submit');
+
+  btn.addEventListener('click', async () => {
+    if (auth.isLoggedIn()) {
+      if (confirm('Möchtest du dich abmelden?')) {
+        await auth.signOut();
+      }
+    } else {
+      input.value = '';
+      status.hidden = true;
+      modal.showModal();
+    }
   });
+
+  form.addEventListener('submit', async (e) => {
+    if (e.submitter && e.submitter.value === 'cancel') return;
+    if (e.submitter && e.submitter.value !== 'confirm') return;
+    e.preventDefault();
+    submit.disabled = true;
+    try {
+      await auth.signInWithMagicLink(input.value);
+      status.textContent = '✓ Login-Link verschickt — schau in dein Postfach.';
+      status.hidden = false;
+    } catch (err) {
+      status.textContent = '✗ Fehler: ' + err.message;
+      status.hidden = false;
+    } finally {
+      submit.disabled = false;
+    }
+  });
+
+  // Header state on auth change
+  auth.onChange(async (event, session) => {
+    updateHeaderAuthState();
+    if (event === 'SIGNED_IN' && session?.user) {
+      modal.close();
+      try {
+        const { mergedProfile, mergedItems } = await sync.runOnLogin(session.user.id);
+        if (mergedProfile) profile = mergedProfile;
+        if (mergedItems) wishlist = mergedItems;
+        renderProfile();
+        renderWishlist();
+      } catch (err) {
+        console.error('Sync failed:', err);
+      }
+    }
+  });
+}
+
+function updateHeaderAuthState() {
+  const btn = document.getElementById('btn-open-login');
+  if (auth.isLoggedIn()) {
+    const u = auth.getUser();
+    btn.textContent = u?.email ?? 'Abmelden';
+    btn.classList.add('logged-in');
+  } else {
+    btn.textContent = 'Anmelden';
+    btn.classList.remove('logged-in');
+  }
 }
 
 function initFooterCookies() {
