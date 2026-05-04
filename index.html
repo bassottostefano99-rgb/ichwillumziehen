@@ -187,7 +187,10 @@
     </div>
   </section>
 
-  <!-- Affiliate cards + AdSense will be injected in Phase 3 -->
+  <!-- AdSense slot — loaded by app.js after consent -->
+  <div class="adsense-slot" id="adsense-slot" hidden></div>
+
+</main>
 
 </main>
 
@@ -211,6 +214,26 @@
       <button class="btn btn-primary" id="login-submit" type="submit" value="confirm">Login-Link senden</button>
     </div>
     <div id="login-status" class="modal-status" hidden></div>
+  </form>
+</dialog>
+
+<!-- Cookie Banner -->
+<dialog id="cookie-banner" class="cookie-banner">
+  <form method="dialog" id="cookie-form">
+    <h3>Datenschutz-Einstellung</h3>
+    <p>Wir nutzen technisch notwendige Speicher (Profildaten, Login-Status). Optional dürfen wir personalisierte Werbung anzeigen.</p>
+    <label class="ck-row">
+      <input type="checkbox" checked disabled />
+      <span><strong>Notwendig</strong> — Profil &amp; Login (immer aktiv)</span>
+    </label>
+    <label class="ck-row">
+      <input type="checkbox" id="ck-ads" />
+      <span><strong>Personalisierte Werbung</strong> — Google AdSense</span>
+    </label>
+    <div class="ck-actions">
+      <button class="btn btn-secondary" type="submit" value="necessary">Nur Notwendig</button>
+      <button class="btn btn-primary" type="submit" value="all">Alle akzeptieren</button>
+    </div>
   </form>
 </dialog>
 

@@ -10,12 +10,16 @@ import { createDefaultProfile, makeProfileStore, makeWishlistStore } from './lib
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 import { makeAuth } from './lib/auth.js';
 import { makeSync } from './lib/sync.js';
+import { makeConsentStore, isConsentDecided } from './lib/consent.js';
 
 const SUPABASE_URL = 'https://bvtmvirboshsyiqknxdd.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ2dG12aXJib3Noc3lpcWtueGRkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5MTI3ODEsImV4cCI6MjA5MzQ4ODc4MX0.XLG_Bkj3RFOZSrtwYjS9inR3oYoBhI8cpONIau-NpP0';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const auth = makeAuth(supabase);
+const consentStore = makeConsentStore({ storage: window.localStorage });
+const ADSENSE_CLIENT = 'ca-pub-XXXXXXXXXXXXXXXX';        // TODO: replace after AdSense approval
+const ADSENSE_SLOT_ID = 'XXXXXXXXXX';                     // TODO: replace after AdSense approval
 
 // ── Config ──────────────────────────────────────────────────────────────────
 const AFFILIATE = makeAffiliateConfig({
@@ -42,7 +46,7 @@ async function init() {
   initMietcheckUI();
   initWishlistUI();
   initAuthUI();
-  initFooterCookies();
+  initConsent();
 
   await auth.getSession();
   updateHeaderAuthState();
@@ -431,12 +435,60 @@ function updateHeaderAuthState() {
   }
 }
 
-function initFooterCookies() {
-  // Phase 3 — cookie banner re-edit
+function initConsent() {
+  const banner = document.getElementById('cookie-banner');
+  const form = document.getElementById('cookie-form');
+  const ckAds = document.getElementById('ck-ads');
+
+  const existing = consentStore.load();
+  if (!isConsentDecided(existing)) {
+    banner.showModal();
+  } else {
+    applyConsent(existing);
+  }
+
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const choice = e.submitter?.value;
+    const ads = choice === 'all' ? true : ckAds.checked;
+    const saved = consentStore.save({ ads });
+    banner.close();
+    applyConsent(saved);
+  });
+
   document.getElementById('ftr-cookies').addEventListener('click', e => {
     e.preventDefault();
-    alert('Cookie-Settings kommen in Phase 3.');
+    const c = consentStore.load();
+    ckAds.checked = !!c?.ads;
+    banner.showModal();
   });
+}
+
+function applyConsent(consent) {
+  loadAdSense({ personalized: !!consent.ads });
+}
+
+function loadAdSense({ personalized }) {
+  const slot = document.getElementById('adsense-slot');
+  if (slot.dataset.loaded === '1') return;        // never load twice
+
+  // Use IntersectionObserver to defer load until scrolled near
+  const obs = new IntersectionObserver((entries, o) => {
+    if (!entries.some(e => e.isIntersecting)) return;
+    o.disconnect();
+
+    if (ADSENSE_CLIENT.includes('XXXX')) return;        // not yet approved — leave empty
+    slot.dataset.loaded = '1';
+    slot.hidden = false;
+    slot.innerHTML = `<ins class="adsbygoogle" style="display:block" data-ad-client="${ADSENSE_CLIENT}" data-ad-slot="${ADSENSE_SLOT_ID}" data-ad-format="auto" data-full-width-responsive="true"${personalized ? '' : ' data-npa-on-unknown-consent="true"'}></ins>`;
+    const s = document.createElement('script');
+    s.async = true;
+    s.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`;
+    s.crossOrigin = 'anonymous';
+    document.head.appendChild(s);
+    s.onload = () => { (window.adsbygoogle = window.adsbygoogle || []).push({}); };
+  }, { rootMargin: '300px' });
+  obs.observe(slot);
 }
 
 // ── Boot ────────────────────────────────────────────────────────────────────
