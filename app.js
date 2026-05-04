@@ -2,7 +2,7 @@
 
 import { createCityData } from './lib/cityData.js';
 import * as MC from './lib/mietcheck.js';
-import { tagAffiliate, makeAffiliateConfig } from './lib/affiliate.js';
+import { tagAffiliate, makeAffiliateConfig, isAmazonUrl } from './lib/affiliate.js';
 import { normalizeItem, addItem, deleteItem, clearAll, calcTotal } from './lib/wishlist.js';
 import { createDefaultProfile, makeProfileStore, makeWishlistStore } from './lib/profile.js';
 
@@ -40,6 +40,13 @@ async function init() {
 const fmtEur = (cents) => new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format((cents ?? 0) / 100);
 const fmtEurInt = (val) => `${Math.round(val).toLocaleString('de-DE')} €`;
 const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+const isSafeUrl = (url) => {
+  if (!url) return false;
+  try {
+    const u = new URL(url);
+    return u.protocol === 'https:' || u.protocol === 'http:';
+  } catch { return false; }
+};
 
 // ── Mietcheck UI ────────────────────────────────────────────────────────────
 function initMietcheckUI() {
@@ -118,7 +125,7 @@ function renderTierPill() {
 
 function renderEstList() {
   const list = document.getElementById('mc-est-list');
-  const cats = ['lebensmittel','essen','gym','kleidung','handy','abos','urlaub','sparen','sonstiges'];
+  const cats = MC.LEBENSHALTUNG_KEYS;
   const labels = {
     lebensmittel: ['Lebensmittel', 'Einkaufen & Kochen'],
     essen: ['Essen gehen & Lieferando', 'Restaurant, Delivery'],
@@ -289,12 +296,12 @@ function renderWishlist() {
     grid.innerHTML = `<div class="wl-empty">Füge dein erstes Item hinzu — Möbel, Deko, Werkzeuge. Bild und Kauflink optional.</div>`;
   } else {
     grid.innerHTML = wishlist.map(item => {
-      const imgHtml = item.imageUrl
+      const imgHtml = isSafeUrl(item.imageUrl)
         ? `<img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" loading="lazy" onerror="this.outerHTML='Kein Bild'" />`
         : 'Kein Bild';
       const taggedLink = tagAffiliate(item.linkUrl, AFFILIATE);
-      const isAmazon = item.linkUrl && /(^|\.)amazon\.[a-z.]+$/i.test(new URL(item.linkUrl).hostname);
-      const linkHtml = taggedLink
+      const isAmazon = isAmazonUrl(item.linkUrl);
+      const linkHtml = isSafeUrl(taggedLink)
         ? `<a class="wl-buy" href="${escapeHtml(taggedLink)}" target="_blank" rel="noopener nofollow sponsored">Zum Shop${isAmazon ? '<span class="wl-werb">(Werbung)</span>' : ''}</a>`
         : `<span class="wl-buy disabled">Kein Link</span>`;
       return `
