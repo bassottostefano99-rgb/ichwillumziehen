@@ -409,8 +409,8 @@ strong { font-weight: 500; }
 .adsense-slot {
   margin: 24px auto; max-width: 980px; padding: 0 40px;
   text-align: center;
+  min-height: 100px;   /* reserves vertical space — prevents layout-shift when ad loads */
 }
-.adsense-slot[hidden] { display: none; }
 
 /* === Responsive === */
 @media (max-width: 720px) {
