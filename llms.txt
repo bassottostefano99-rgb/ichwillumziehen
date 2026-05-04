@@ -32,9 +32,9 @@ München, Frankfurt am Main, Hamburg, Stuttgart, Berlin, Köln, Düsseldorf, Hei
 - Betreiber: Stefano Bassotto, Indie Software Builder
 - Sitz: Fellbach, Baden-Württemberg, Deutschland
 - Kontakt: bassotto.stefano99@gmail.com
-- Über-uns: https://ichwillumziehen.com/ueber-uns.html
-- Impressum: https://ichwillumziehen.com/impressum.html
-- Datenschutz: https://ichwillumziehen.com/datenschutz.html
+- Über-uns: https://ichwillumziehen.com/ueber-uns
+- Impressum: https://ichwillumziehen.com/impressum
+- Datenschutz: https://ichwillumziehen.com/datenschutz
 
 ## Nutzung der Inhalte
 
