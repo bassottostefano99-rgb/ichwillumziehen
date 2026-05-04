@@ -1,0 +1,12 @@
+{
+  "name": "ichwillumziehen",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Mietrechner + Umzugsbudget — ichwillumziehen.com",
+  "scripts": {
+    "test": "node --test tests/",
+    "test:watch": "node --test --watch tests/",
+    "serve": "python -m http.server 5500"
+  }
+}
