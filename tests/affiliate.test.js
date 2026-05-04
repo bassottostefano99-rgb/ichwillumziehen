@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { tagAffiliate, makeAffiliateConfig } from '../lib/affiliate.js';
+import { tagAffiliate, makeAffiliateConfig, isAmazonUrl } from '../lib/affiliate.js';
 
 const cfg = makeAffiliateConfig({ amazonTag: 'iwu-21' });
 
@@ -38,7 +38,21 @@ test('tagAffiliate respects disabled flag', () => {
   assert.equal(tagAffiliate(url, disabled), url);
 });
 
-test('isAmazonUrl detects amazon hostnames', () => {
-  // re-imported in case file exposes helper
-  // We test the public API only — skip if not exported
+test('isAmazonUrl rejects spoofed/phishing domains', () => {
+  assert.equal(isAmazonUrl('https://amazon.de.attacker.com/dp/X'), false);
+  assert.equal(isAmazonUrl('https://amazon.com.evil.org/x'), false);
+  assert.equal(isAmazonUrl('https://notamazon.com/x'), false);
+  assert.equal(isAmazonUrl('https://amazon-fake.com/x'), false);
+});
+
+test('isAmazonUrl accepts genuine Amazon domains', () => {
+  assert.equal(isAmazonUrl('https://amazon.com/x'), true);
+  assert.equal(isAmazonUrl('https://www.amazon.de/x'), true);
+  assert.equal(isAmazonUrl('https://www.amazon.co.uk/x'), true);
+  assert.equal(isAmazonUrl('https://smile.amazon.de/x'), true);
+});
+
+test('tagAffiliate does NOT tag spoofed amazon-like domains', () => {
+  const url = 'https://amazon.de.attacker.com/dp/X';
+  assert.equal(tagAffiliate(url, cfg), url);
 });
