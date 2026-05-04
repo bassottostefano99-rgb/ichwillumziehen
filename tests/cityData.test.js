@@ -45,3 +45,13 @@ test('getDefaults returns the default object', () => {
   assert.equal(d.lebensmittel, 300);
   assert.equal(d.oepnv, 49);
 });
+
+test('getTier returns correct tier object', () => {
+  const tierS = cd.getTier('S');
+  assert.equal(tierS.label, 'Sehr teuer');
+  assert.equal(tierS.mul.lebensmittel, 1.20);
+});
+
+test('getTier returns undefined for unknown tier key', () => {
+  assert.equal(cd.getTier('ZZ'), undefined);
+});
