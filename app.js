@@ -18,8 +18,8 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const auth = makeAuth(supabase);
 const consentStore = makeConsentStore({ storage: window.localStorage });
-const ADSENSE_CLIENT = 'ca-pub-XXXXXXXXXXXXXXXX';        // TODO: replace after AdSense approval
-const ADSENSE_SLOT_ID = 'XXXXXXXXXX';                     // TODO: replace after AdSense approval
+const ADSENSE_CLIENT = 'ca-pub-5354902315482731';
+const ADSENSE_SLOT_ID = 'XXXXXXXXXX';                     // TODO: replace with real ad-unit slot ID after creating an ad unit in AdSense
 
 // ── Config ──────────────────────────────────────────────────────────────────
 const AFFILIATE = makeAffiliateConfig({
@@ -472,21 +472,19 @@ function loadAdSense({ personalized }) {
   const slot = document.getElementById('adsense-slot');
   if (slot.dataset.loaded === '1') return;        // never load twice
 
-  // Use IntersectionObserver to defer load until scrolled near
+  // The AdSense SDK is loaded eagerly in <head> for verification.
+  // Here we just inject the <ins> ad unit when in viewport + push to queue.
+  // Until a real slot ID is configured, leave the slot empty.
+  if (ADSENSE_SLOT_ID.includes('XXXX')) return;
+
   const obs = new IntersectionObserver((entries, o) => {
     if (!entries.some(e => e.isIntersecting)) return;
     o.disconnect();
 
-    if (ADSENSE_CLIENT.includes('XXXX')) return;        // not yet approved — leave empty
     slot.dataset.loaded = '1';
     slot.hidden = false;
     slot.innerHTML = `<ins class="adsbygoogle" style="display:block" data-ad-client="${ADSENSE_CLIENT}" data-ad-slot="${ADSENSE_SLOT_ID}" data-ad-format="auto" data-full-width-responsive="true"${personalized ? '' : ' data-npa-on-unknown-consent="true"'}></ins>`;
-    const s = document.createElement('script');
-    s.async = true;
-    s.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`;
-    s.crossOrigin = 'anonymous';
-    document.head.appendChild(s);
-    s.onload = () => { (window.adsbygoogle = window.adsbygoogle || []).push({}); };
+    (window.adsbygoogle = window.adsbygoogle || []).push({});
   }, { rootMargin: '300px' });
   obs.observe(slot);
 }
