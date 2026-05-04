@@ -1,0 +1,346 @@
+// ── ichwillumziehen.com — UI glue & module wiring ───────────────────────────
+
+import { createCityData } from './lib/cityData.js';
+import * as MC from './lib/mietcheck.js';
+import { tagAffiliate, makeAffiliateConfig } from './lib/affiliate.js';
+import { normalizeItem, addItem, deleteItem, clearAll, calcTotal } from './lib/wishlist.js';
+import { createDefaultProfile, makeProfileStore, makeWishlistStore } from './lib/profile.js';
+
+// ── Config ──────────────────────────────────────────────────────────────────
+const AFFILIATE = makeAffiliateConfig({
+  amazonTag: 'PLATZHALTER-21',           // TODO: replace with real Amazon Partnernet tag
+  amazonEnabled: true,
+});
+
+// ── State ───────────────────────────────────────────────────────────────────
+const profileStore = makeProfileStore({ storage: window.localStorage });
+const wishlistStore = makeWishlistStore({ storage: window.localStorage });
+
+let cityData = null;
+let profile = profileStore.load() ?? createDefaultProfile();
+let wishlist = wishlistStore.load();
+let currentStep = 1;
+
+// ── Init ────────────────────────────────────────────────────────────────────
+async function init() {
+  const res = await fetch('./city-data.json');
+  if (!res.ok) throw new Error('city-data.json failed to load');
+  cityData = createCityData(await res.json());
+
+  initMietcheckUI();
+  initWishlistUI();
+  initAuthUI();
+  initFooterCookies();
+
+  renderProfile();
+  renderWishlist();
+}
+
+// ── Format ──────────────────────────────────────────────────────────────────
+const fmtEur = (cents) => new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format((cents ?? 0) / 100);
+const fmtEurInt = (val) => `${Math.round(val).toLocaleString('de-DE')} €`;
+const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+
+// ── Mietcheck UI ────────────────────────────────────────────────────────────
+function initMietcheckUI() {
+  const $ = (id) => document.getElementById(id);
+
+  // Income
+  $('mc-income').addEventListener('input', e => { profile.income = parseInt(e.target.value) || 0; persistAndRevalidate(); });
+
+  // KV
+  document.querySelectorAll('[data-kv]').forEach(btn => btn.addEventListener('click', () => {
+    profile.kv = btn.dataset.kv;
+    document.querySelectorAll('[data-kv]').forEach(b => b.classList.toggle('sel', b === btn));
+    $('mc-kv-x').hidden = profile.kv !== 'p';
+    persistAndRevalidate();
+  }));
+  $('mc-kvb').addEventListener('input', e => { profile.kvBetrag = parseInt(e.target.value) || 0; persistAndRevalidate(); });
+
+  // Auto
+  document.querySelectorAll('[data-auto]').forEach(btn => btn.addEventListener('click', () => {
+    profile.auto = btn.dataset.auto;
+    document.querySelectorAll('[data-auto]').forEach(b => b.classList.toggle('sel', b === btn));
+    $('mc-auto-x').hidden = profile.auto !== 'ja';
+    $('mc-oepnv-x').hidden = profile.auto !== 'nein';
+    persistAndRevalidate();
+  }));
+  $('mc-arate').addEventListener('input', e => { profile.autoRate = parseInt(e.target.value) || 0; persistAndRevalidate(); });
+  $('mc-abenzin').addEventListener('input', e => { profile.autoBenzin = parseInt(e.target.value) || 0; persistAndRevalidate(); });
+  $('mc-avers').addEventListener('input', e => { profile.autoVersicherung = parseInt(e.target.value) || 0; persistAndRevalidate(); });
+  $('mc-oepnv').addEventListener('input', e => { profile.autoOepnv = parseInt(e.target.value) || 0; persistAndRevalidate(); });
+
+  // City
+  const citySelect = $('mc-city');
+  cityData.listCities().forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c; opt.textContent = c === 'ANDERE' ? 'Andere Stadt' : c;
+    citySelect.appendChild(opt);
+  });
+  citySelect.addEventListener('change', e => { profile.city = e.target.value; renderTierPill(); renderEstList(); persistAndRevalidate(); });
+
+  // Wohnung
+  $('mc-kalt').addEventListener('input', persistAndRevalidate);
+  $('mc-qm').addEventListener('input', persistAndRevalidate);
+
+  // Navigation
+  $('mc-next').addEventListener('click', goNext);
+  $('mc-back').addEventListener('click', goBack);
+}
+
+function renderProfile() {
+  const $ = (id) => document.getElementById(id);
+  $('mc-income').value = profile.income || '';
+  document.querySelectorAll('[data-kv]').forEach(b => b.classList.toggle('sel', b.dataset.kv === profile.kv));
+  $('mc-kv-x').hidden = profile.kv !== 'p';
+  $('mc-kvb').value = profile.kvBetrag || '';
+  document.querySelectorAll('[data-auto]').forEach(b => b.classList.toggle('sel', b.dataset.auto === profile.auto));
+  $('mc-auto-x').hidden = profile.auto !== 'ja';
+  $('mc-oepnv-x').hidden = profile.auto !== 'nein';
+  $('mc-arate').value = profile.autoRate || '';
+  $('mc-abenzin').value = profile.autoBenzin || '';
+  $('mc-avers').value = profile.autoVersicherung || '';
+  $('mc-oepnv').value = profile.autoOepnv || '';
+  if (profile.city) $('mc-city').value = profile.city;
+  renderTierPill();
+  renderEstList();
+  persistAndRevalidate();
+}
+
+function renderTierPill() {
+  const pill = document.getElementById('mc-city-info');
+  if (!profile.city) { pill.hidden = true; return; }
+  const tier = cityData.getCityTier(profile.city);
+  const tierObj = cityData.getTier(tier);
+  pill.hidden = false;
+  pill.textContent = `${tierObj.label} (Tier ${tier}) — Lebensmittel/Restaurant/Sport angepasst`;
+}
+
+function renderEstList() {
+  const list = document.getElementById('mc-est-list');
+  const cats = ['lebensmittel','essen','gym','kleidung','handy','abos','urlaub','sparen','sonstiges'];
+  const labels = {
+    lebensmittel: ['Lebensmittel', 'Einkaufen & Kochen'],
+    essen: ['Essen gehen & Lieferando', 'Restaurant, Delivery'],
+    gym: ['Sport & Hobbys', 'Gym, Verein'],
+    kleidung: ['Kleidung & Drogerie', 'Shopping, Hygiene'],
+    handy: ['Handy', 'Tarif + Daten'],
+    abos: ['Streaming & Abos', 'Netflix, Spotify ...'],
+    urlaub: ['Urlaub & Freizeit', 'Ø pro Monat'],
+    sparen: ['Sparen / ETF', 'Rücklage, Investition'],
+    sonstiges: ['Sonstiges', 'Unvorhergesehenes'],
+  };
+  list.innerHTML = cats.map(id => {
+    const def = profile.city ? cityData.getEffectiveDefault(profile.city, id) : (cityData.getDefaults()[id] ?? 0);
+    const override = profile.lebenshaltung[id];
+    const value = override ?? def;
+    const isOverride = override != null;
+    return `
+      <div class="mc-est${isOverride ? ' editing' : ''}" data-cat="${id}">
+        <div class="mc-est-name">${labels[id][0]}<span class="sub">${isOverride ? '✓ Eigener Wert' : 'Geschätzt'}</span></div>
+        <span class="mc-est-amt${isOverride ? ' c' : ''}">~${value}€</span>
+        <button class="mc-est-edit" data-cat="${id}" type="button">${isOverride ? '✓' : 'Anpassen'}</button>
+        <div class="mc-est-input" data-cat="${id}"><input type="number" value="${value}" /></div>
+      </div>`;
+  }).join('');
+
+  list.querySelectorAll('.mc-est-edit').forEach(btn => btn.addEventListener('click', () => toggleEstEdit(btn.dataset.cat)));
+  list.querySelectorAll('.mc-est-input input').forEach(inp => {
+    inp.addEventListener('change', e => {
+      const cat = e.target.parentElement.dataset.cat;
+      profile.lebenshaltung[cat] = parseInt(e.target.value) || 0;
+      renderEstList();
+      persistAndRevalidate();
+    });
+  });
+}
+
+function toggleEstEdit(cat) {
+  const inputBox = document.querySelector(`.mc-est-input[data-cat="${cat}"]`);
+  inputBox.classList.toggle('open');
+  if (inputBox.classList.contains('open')) inputBox.querySelector('input').focus();
+}
+
+function persistAndRevalidate() {
+  profileStore.save(profile);
+  validateNext();
+}
+
+function validateNext() {
+  const $ = (id) => document.getElementById(id);
+  const next = $('mc-next');
+  if (currentStep === 1) {
+    next.disabled = !(profile.income >= 300 && profile.kv && profile.auto);
+    next.textContent = 'Weiter';
+  } else if (currentStep === 2) {
+    next.disabled = !profile.city;
+    next.textContent = 'Wohnung prüfen';
+  } else {
+    const kalt = parseInt($('mc-kalt').value) || 0;
+    const qm = parseInt($('mc-qm').value) || 0;
+    next.disabled = !(kalt > 100 && qm > 5);
+    next.textContent = 'Berechnen';
+  }
+}
+
+function showStep(n) {
+  currentStep = n;
+  document.querySelectorAll('.mc-screen').forEach(el => { el.hidden = parseInt(el.dataset.step) !== n; });
+  for (let i = 1; i <= 3; i++) {
+    document.getElementById(`mc-step-${i}`).classList.toggle('done', i <= n);
+  }
+  document.getElementById('mc-back').hidden = n === 1;
+  validateNext();
+  if (n === 2) renderEstList();
+}
+
+function goNext() {
+  const $ = (id) => document.getElementById(id);
+  if (currentStep === 1) showStep(2);
+  else if (currentStep === 2) showStep(3);
+  else if (currentStep === 3) {
+    const listing = { kaltmiete: parseInt($('mc-kalt').value) || 0, qm: parseInt($('mc-qm').value) || 0 };
+    renderResult(listing);
+  }
+}
+
+function goBack() {
+  if (currentStep > 1) showStep(currentStep - 1);
+}
+
+function renderResult(listing) {
+  const result = MC.runMietcheck(profile, listing, cityData);
+  const v = result.verdict;
+  const sc = v.tone;
+
+  const html = `
+    <div class="mc-verdict ${sc}">${escapeHtml(v.text)}</div>
+    <div class="mc-verdict-sub">${escapeHtml(v.sub)}</div>
+    <div class="mc-surplus ${sc}">
+      <div class="mc-snum" style="color:${sc==='ok'?'var(--accent)':sc==='warn'?'var(--warn)':'var(--bad)'}">${result.surplus>0?'+':''}${result.surplus}€</div>
+      <div class="mc-slbl">verbleiben dir monatlich</div>
+    </div>
+    <span class="mc-slabel">Dein Budget</span>
+    <div class="mc-bdown">
+      <div class="mc-brow"><span class="mc-bl">Nettoeinkommen</span><span class="mc-bv mc-pos">+${result.breakdown.income}€</span></div>
+      ${result.breakdown.kvBetrag > 0 ? `<div class="mc-brow"><span class="mc-bl">Private KV</span><span class="mc-bv mc-neg">-${result.breakdown.kvBetrag}€</span></div>` : ''}
+      ${result.breakdown.autoKosten > 0 ? `<div class="mc-brow"><span class="mc-bl">${profile.auto==='ja'?'Auto':'ÖPNV'}</span><span class="mc-bv mc-neg">-${result.breakdown.autoKosten}€</span></div>` : ''}
+      <div class="mc-brow"><span class="mc-bl">Lebenshaltung</span><span class="mc-bv mc-neg">-${result.breakdown.lebenshaltung}€</span></div>
+      <div class="mc-brow tot"><span class="mc-bl">Für Wohnung verfügbar</span><span class="mc-bv" style="color:${result.availForRent>0?'var(--accent)':'var(--bad)'}">${result.availForRent>0?'+':''}${result.availForRent}€</span></div>
+    </div>
+    <span class="mc-slabel">Diese Wohnung</span>
+    <div class="mc-bdown">
+      <div class="mc-brow"><span class="mc-bl">Kaltmiete</span><span class="mc-bv mc-neg">-${result.breakdown.kaltmiete}€</span></div>
+      <div class="mc-brow"><span class="mc-bl">Strom (~${listing.qm}m²)</span><span class="mc-bv mc-neg">-${result.breakdown.strom}€</span></div>
+      <div class="mc-brow"><span class="mc-bl">Heizung &amp; Wasser</span><span class="mc-bv mc-neg">-${result.breakdown.heizung}€</span></div>
+      <div class="mc-brow"><span class="mc-bl">Internet + GEZ + Haftpflicht</span><span class="mc-bv mc-neg">-${result.breakdown.sonstNK}€</span></div>
+      <div class="mc-brow tot"><span class="mc-bl">Warmmiete gesamt</span><span class="mc-bv">${result.warmmiete}€</span></div>
+    </div>
+    <span class="mc-slabel">Einmalig beim Einzug</span>
+    <div class="mc-bdown">
+      <div class="mc-brow"><span class="mc-bl">Kaution (2× Kaltmiete)</span><span class="mc-bv">${listing.kaltmiete * 2}€</span></div>
+      <div class="mc-brow"><span class="mc-bl">Renovierung Pauschal</span><span class="mc-bv">500€</span></div>
+      <div class="mc-brow"><span class="mc-bl">Möbel-Reserve</span><span class="mc-bv">2.000€</span></div>
+      <div class="mc-brow tot"><span class="mc-bl">Gesamt einmalig</span><span class="mc-bv">${result.einmalig}€</span></div>
+    </div>
+  `;
+  document.getElementById('mc-result').innerHTML = html;
+  document.getElementById('mc-result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ── Wishlist UI ─────────────────────────────────────────────────────────────
+function initWishlistUI() {
+  const form = document.getElementById('wl-form');
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const fd = new FormData(form);
+    try {
+      const item = normalizeItem({
+        name: fd.get('name'),
+        price: fd.get('price'),
+        imageUrl: fd.get('image'),
+        linkUrl: fd.get('link'),
+        note: fd.get('note'),
+      });
+      wishlist = addItem(wishlist, item);
+      wishlistStore.save(wishlist);
+      form.reset();
+      document.getElementById('wl-name').focus();
+      renderWishlist();
+    } catch (err) {
+      alert(err.message);
+    }
+  });
+
+  document.getElementById('wl-clear').addEventListener('click', () => {
+    if (!wishlist.length) return;
+    if (!confirm('Wirklich alle Items löschen?')) return;
+    wishlist = clearAll(wishlist);
+    wishlistStore.save(wishlist);
+    renderWishlist();
+  });
+}
+
+function renderWishlist() {
+  const grid = document.getElementById('wl-grid');
+  const total = document.getElementById('wl-total');
+
+  if (!wishlist.length) {
+    grid.innerHTML = `<div class="wl-empty">Füge dein erstes Item hinzu — Möbel, Deko, Werkzeuge. Bild und Kauflink optional.</div>`;
+  } else {
+    grid.innerHTML = wishlist.map(item => {
+      const imgHtml = item.imageUrl
+        ? `<img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" loading="lazy" onerror="this.outerHTML='Kein Bild'" />`
+        : 'Kein Bild';
+      const taggedLink = tagAffiliate(item.linkUrl, AFFILIATE);
+      const isAmazon = item.linkUrl && /(^|\.)amazon\.[a-z.]+$/i.test(new URL(item.linkUrl).hostname);
+      const linkHtml = taggedLink
+        ? `<a class="wl-buy" href="${escapeHtml(taggedLink)}" target="_blank" rel="noopener nofollow sponsored">Zum Shop${isAmazon ? '<span class="wl-werb">(Werbung)</span>' : ''}</a>`
+        : `<span class="wl-buy disabled">Kein Link</span>`;
+      return `
+        <article class="wl-card" data-id="${item.id}">
+          <div class="wl-card-img">${imgHtml}</div>
+          <div class="wl-card-body">
+            <div class="wl-card-top">
+              <span class="wl-card-name">${escapeHtml(item.name)}</span>
+              <span class="wl-card-price">${fmtEur(item.priceCents)}</span>
+            </div>
+            <div class="wl-card-note">${escapeHtml(item.note ?? '')}</div>
+            <div class="wl-card-actions">
+              ${linkHtml}
+              <button class="wl-del" type="button" data-del="${item.id}">✕</button>
+            </div>
+          </div>
+        </article>`;
+    }).join('');
+    grid.querySelectorAll('[data-del]').forEach(btn => btn.addEventListener('click', () => {
+      wishlist = deleteItem(wishlist, btn.dataset.del);
+      wishlistStore.save(wishlist);
+      renderWishlist();
+    }));
+  }
+
+  total.textContent = fmtEur(calcTotal(wishlist));
+}
+
+// ── Stubs (filled in later phases) ──────────────────────────────────────────
+function initAuthUI() {
+  // Phase 2 — auth flow wiring
+  document.getElementById('btn-open-login').addEventListener('click', () => {
+    alert('Login kommt in Phase 2 — aktuell läuft alles lokal im Browser.');
+  });
+}
+
+function initFooterCookies() {
+  // Phase 3 — cookie banner re-edit
+  document.getElementById('ftr-cookies').addEventListener('click', e => {
+    e.preventDefault();
+    alert('Cookie-Settings kommen in Phase 3.');
+  });
+}
+
+// ── Boot ────────────────────────────────────────────────────────────────────
+init().catch(err => {
+  console.error(err);
+  document.body.innerHTML = `<pre style="padding:20px;color:#ff6b6b">Fehler beim Laden: ${err.message}</pre>`;
+});

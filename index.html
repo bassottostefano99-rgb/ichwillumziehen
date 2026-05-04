@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ichwillumziehen — Mietrechner & Umzugsbudget</title>
+  <meta name="description" content="Ehrlicher Mietrechner mit Stadt-spezifischen Lebenshaltungskosten und ein Umzugsbudget zum Mitplanen. Kostenlos, ohne Anmeldung." />
+  <meta property="og:title" content="ichwillumziehen — Mietrechner & Umzugsbudget" />
+  <meta property="og:description" content="Kannst du dir die Wohnung leisten? Ehrlich rechnen statt raten." />
+  <meta property="og:type" content="website" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+
+<header class="hdr">
+  <a class="hdr-logo" href="/">ichwillumziehen</a>
+  <nav class="hdr-nav">
+    <a href="#mietcheck">Miet-Check</a>
+    <a href="#umzugsbudget">Umzugsbudget</a>
+    <a href="#faq">FAQ</a>
+  </nav>
+  <button class="hdr-login" id="btn-open-login" type="button">Anmelden</button>
+</header>
+
+<main>
+
+  <section class="hero">
+    <div class="eyebrow">— Mietrechner & Umzugsbudget —</div>
+    <h1>Kannst du dir<br>die Wohnung <em>leisten?</em></h1>
+    <p class="hero-sub">Ehrlicher Mietrechner mit Stadt-spezifischen Lebenshaltungskosten — und ein Umzugsbudget zum Mitplanen. Kostenlos, ohne Anmeldung.</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="#mietcheck">Miet-Check starten</a>
+      <a class="btn btn-secondary" href="#umzugsbudget">Umzugsbudget</a>
+    </div>
+  </section>
+
+  <section class="section" id="mietcheck">
+    <div class="section-label">— Schritt 1 —</div>
+    <h2>Dein <em>Miet-Check</em></h2>
+    <p class="section-sub">Profil einmal ausfüllen. Stadt + Kaltmiete eingeben. Du siehst sofort, ob's reicht — inklusive Strom, Heizung, Lebenshaltung.</p>
+
+    <div class="tool" id="mc-tool">
+      <div class="mc-progress" aria-label="Fortschritt">
+        <div class="mc-pd" id="mc-step-1"></div>
+        <div class="mc-pd" id="mc-step-2"></div>
+        <div class="mc-pd" id="mc-step-3"></div>
+      </div>
+
+      <!-- Step 1: Profil -->
+      <div class="mc-screen active" data-step="1">
+        <h3>Dein <em>Profil</em></h3>
+        <p class="mc-hint">Einmal ausfüllen — du nutzt es für jede Wohnung.</p>
+        <div class="mc-ibox">
+          <label for="mc-income">Nettoeinkommen / Monat</label>
+          <input id="mc-income" type="number" inputmode="numeric" placeholder="2.500" />
+          <span class="suf">€</span>
+        </div>
+        <div class="mc-hint">Krankenversicherung</div>
+        <div class="mc-c2">
+          <button class="mc-cb" data-kv="g" type="button"><span class="cn">Gesetzlich</span><span class="cs">Im Netto enthalten</span></button>
+          <button class="mc-cb" data-kv="p" type="button"><span class="cn">Privat (PKV)</span><span class="cs">Kommt on top</span></button>
+        </div>
+        <div class="mc-xfield" id="mc-kv-x" hidden>
+          <label for="mc-kvb">PKV-Beitrag / Monat</label>
+          <input id="mc-kvb" type="number" inputmode="numeric" placeholder="450" />
+          <span class="suf">€</span>
+        </div>
+        <div class="mc-hint">Hast du ein Auto?</div>
+        <div class="mc-c2">
+          <button class="mc-cb" data-auto="ja" type="button"><span class="cn">🚗 Ja</span><span class="cs">Eigen oder Leasing</span></button>
+          <button class="mc-cb" data-auto="nein" type="button"><span class="cn">🚌 Nein</span><span class="cs">ÖPNV oder Fahrrad</span></button>
+        </div>
+        <div id="mc-auto-x" hidden>
+          <div class="mc-xfield"><label for="mc-arate">Kredit / Leasing (0 wenn abbezahlt)</label><input id="mc-arate" type="number" inputmode="numeric" placeholder="0" /><span class="suf">€</span></div>
+          <div class="mc-xfield"><label for="mc-abenzin">Benzin / Laden</label><input id="mc-abenzin" type="number" inputmode="numeric" placeholder="120" /><span class="suf">€</span></div>
+          <div class="mc-xfield"><label for="mc-avers">Versicherung + Steuer Ø/Mo</label><input id="mc-avers" type="number" inputmode="numeric" placeholder="80" /><span class="suf">€</span></div>
+        </div>
+        <div id="mc-oepnv-x" hidden>
+          <div class="mc-xfield"><label for="mc-oepnv">ÖPNV / Deutschlandticket</label><input id="mc-oepnv" type="number" inputmode="numeric" placeholder="49" /><span class="suf">€</span></div>
+        </div>
+      </div>
+
+      <!-- Step 2: Lebenshaltung (Stadt + Anpassen) -->
+      <div class="mc-screen" data-step="2" hidden>
+        <h3>Deine <em>Stadt &amp; Lebenshaltung</em></h3>
+        <p class="mc-hint">Wir passen typische Ausgaben an deinen Standort an. Anpassen kannst du jederzeit.</p>
+        <div class="mc-xfield">
+          <label for="mc-city">Stadt</label>
+          <select id="mc-city"></select>
+        </div>
+        <div id="mc-city-info" class="mc-tier-pill"></div>
+        <div id="mc-est-list"></div>
+      </div>
+
+      <!-- Step 3: Wohnung -->
+      <div class="mc-screen" data-step="3" hidden>
+        <h3>Die <em>Wohnung</em></h3>
+        <p class="mc-hint">Kaltmiete + Wohnfläche reichen. Strom, Heizung und Nebenkosten rechnen wir.</p>
+        <div class="mc-ibox"><label for="mc-kalt">Kaltmiete / Monat</label><input id="mc-kalt" type="number" inputmode="numeric" placeholder="1.200" /><span class="suf">€</span></div>
+        <div class="mc-ibox"><label for="mc-qm">Wohnfläche</label><input id="mc-qm" type="number" inputmode="numeric" placeholder="65" /><span class="suf">m²</span></div>
+        <div id="mc-result"></div>
+      </div>
+
+      <div class="mc-footer">
+        <button class="btn btn-secondary" id="mc-back" type="button" hidden>Zurück</button>
+        <button class="btn btn-primary" id="mc-next" type="button" disabled>Weiter</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="umzugsbudget">
+    <div class="section-label">— Schritt 2 —</div>
+    <h2>Dein <em>Umzugsbudget</em></h2>
+    <p class="section-sub">Möbel, Deko, Werkzeuge — alles auf einen Blick. Mit Bild, Preis, Kauflink und Live-Total.</p>
+
+    <div class="aff-disclose">Manche Links sind <strong>Affiliate-Links</strong>. Wenn du über sie kaufst, bekommen wir eine kleine Provision — der Preis ändert sich für dich nicht.</div>
+
+    <div class="wl-tool">
+      <form id="wl-form" class="wl-form">
+        <h3>Item hinzufügen</h3>
+        <div class="wl-field"><label for="wl-name">Produktname *</label><input id="wl-name" name="name" type="text" required placeholder="z.B. Sofa, Schreibtisch" /></div>
+        <div class="wl-field"><label for="wl-price">Preis (€) *</label><input id="wl-price" name="price" type="text" inputmode="decimal" required placeholder="499,99" /></div>
+        <div class="wl-field"><label for="wl-image">Bild-URL (optional)</label><input id="wl-image" name="image" type="url" placeholder="https://..." /></div>
+        <div class="wl-field"><label for="wl-link">Kauflink (optional)</label><input id="wl-link" name="link" type="url" placeholder="https://shop.de/..." /></div>
+        <div class="wl-field"><label for="wl-note">Notiz (optional)</label><input id="wl-note" name="note" type="text" placeholder="Wohnzimmer, IKEA …" /></div>
+        <div class="wl-formrow">
+          <button class="btn btn-primary" type="submit">+ Hinzufügen</button>
+          <button class="btn btn-secondary" type="button" id="wl-clear">Alles löschen</button>
+        </div>
+      </form>
+
+      <div class="wl-list">
+        <div class="wl-total-row">
+          <span class="wl-total-label">Live-Total</span>
+          <span class="wl-total-value" id="wl-total">0,00 €</span>
+        </div>
+        <div class="wl-grid" id="wl-grid"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="faq">
+    <div class="section-label">— Häufige Fragen —</div>
+    <h2>Was du <em>wissen solltest</em></h2>
+    <div class="faq-list">
+      <details class="faq-q"><summary>Wie viel Miete kann ich mir leisten?</summary><div class="faq-a">Eine gängige Faustregel: nicht mehr als 30% deines Nettoeinkommens für Warmmiete. Bei höheren Einkommen (&gt;3.500€) sind 35-40% oft noch tragbar, weil die Fixkosten relativ kleiner werden. Unser Rechner berücksichtigt deine konkreten Lebenshaltungskosten und gibt dir eine ehrliche Antwort.</div></details>
+      <details class="faq-q"><summary>Was sind realistische Nebenkosten?</summary><div class="faq-a">Strom: ca. 50-100€/Monat (abhängig von qm). Heizung: ca. 1,50-2,50€/m² je nach Energieträger. Internet: ca. 30-50€. Rundfunkbeitrag (GEZ): 18,36€. Hausratversicherung: ca. 5-10€. Plus ggf. Haftpflicht (~3-5€). Gesamt: rund 100-180€ zusätzlich zur Kaltmiete.</div></details>
+      <details class="faq-q"><summary>Wie viel kostet ein Umzug in Deutschland?</summary><div class="faq-a">DIY mit gemieteter Sprinter-Box: 200-500€. Lokaler Umzug mit Firma (50km): 800-1.500€. Fern-Umzug 500km mit Firma: 1.500-3.500€. Plus Kaution (2 Monatsmieten), Renovierung der alten Wohnung (oft 300-800€), neue Möbel/Hausrat. Realistisch: 3.000-6.000€ insgesamt.</div></details>
+      <details class="faq-q"><summary>Kaltmiete oder Warmmiete — wo ist der Unterschied?</summary><div class="faq-a">Kaltmiete = nur die reine Miete. Warmmiete = Kaltmiete + Nebenkosten (Heizung, Wasser, Müll, Hausreinigung, manchmal Strom). In Inseraten ist meist die Kaltmiete angegeben. Plane immer 100-180€/Monat zusätzlich für Strom, Internet, GEZ und Versicherungen.</div></details>
+    </div>
+  </section>
+
+  <!-- Affiliate cards + AdSense will be injected in Phase 3 -->
+
+</main>
+
+<footer class="ftr">
+  <div class="ftr-links">
+    <a href="/impressum.html">Impressum</a>
+    <a href="/datenschutz.html">Datenschutz</a>
+    <a href="#" id="ftr-cookies">Cookies</a>
+  </div>
+  <div class="ftr-brand">ichwillumziehen.com · Made with care</div>
+</footer>
+
+<!-- Login Modal -->
+<dialog id="login-modal" class="modal">
+  <form method="dialog" class="modal-form" id="login-form">
+    <h3>Anmelden</h3>
+    <p>Wir schicken dir einen Login-Link per E-Mail. Kein Passwort, keine Speicherung deines Geräts.</p>
+    <input id="login-email" type="email" required placeholder="deine@email.de" />
+    <div class="modal-actions">
+      <button class="btn btn-secondary" value="cancel" type="submit">Abbrechen</button>
+      <button class="btn btn-primary" id="login-submit" type="submit" value="confirm">Login-Link senden</button>
+    </div>
+    <div id="login-status" class="modal-status" hidden></div>
+  </form>
+</dialog>
+
+<!-- JSON-LD FAQ schema for SEO -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "Wie viel Miete kann ich mir leisten?", "acceptedAnswer": { "@type": "Answer", "text": "Eine gängige Faustregel: nicht mehr als 30% deines Nettoeinkommens für Warmmiete." } },
+    { "@type": "Question", "name": "Was sind realistische Nebenkosten?", "acceptedAnswer": { "@type": "Answer", "text": "Strom 50-100€, Heizung 1,50-2,50€/m², Internet 30-50€, GEZ 18,36€." } },
+    { "@type": "Question", "name": "Wie viel kostet ein Umzug in Deutschland?", "acceptedAnswer": { "@type": "Answer", "text": "DIY 200-500€, lokal mit Firma 800-1.500€, Fernumzug 1.500-3.500€." } },
+    { "@type": "Question", "name": "Kaltmiete oder Warmmiete — wo ist der Unterschied?", "acceptedAnswer": { "@type": "Answer", "text": "Kaltmiete = reine Miete. Warmmiete = Kaltmiete plus Nebenkosten." } }
+  ]
+}
+</script>
+
+<script type="module" src="./app.js"></script>
+</body>
+</html>
