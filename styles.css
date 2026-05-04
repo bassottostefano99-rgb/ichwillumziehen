@@ -37,9 +37,26 @@ strong { font-weight: 500; }
   border-bottom: 0.5px solid var(--border);
   backdrop-filter: blur(8px);
 }
-.hdr-logo { display: flex; align-items: center; gap: 10px; }
-.hdr-logo-img { width: 28px; height: 28px; display: block; border-radius: 6px; }
-.hdr-logo-text { font-family: var(--serif); color: var(--accent); font-size: 17px; letter-spacing: 0.04em; }
+.hdr-logo { display: flex; align-items: center; gap: 13px; transition: opacity 0.15s; }
+.hdr-logo:hover { opacity: 0.85; }
+.hdr-logo-img {
+  width: 40px; height: 40px;
+  display: block; border-radius: 9px;
+  box-shadow: 0 2px 12px rgba(200, 240, 96, 0.12);
+}
+.hdr-logo-text {
+  display: inline-flex; align-items: baseline; gap: 7px;
+  font-family: var(--serif); line-height: 1;
+  letter-spacing: -0.01em;
+}
+.hdr-logo-prefix {
+  font-size: 14px; font-style: italic; color: var(--muted);
+  font-weight: 400;
+}
+.hdr-logo-name {
+  font-size: 21px; color: var(--accent);
+  letter-spacing: 0;
+}
 .hdr-nav { display: flex; gap: 18px; font-size: 13px; color: var(--muted); }
 .hdr-nav a:hover { color: var(--text); }
 .hdr-login {
@@ -429,6 +446,10 @@ strong { font-weight: 500; }
 @media (max-width: 720px) {
   .hdr { padding: 10px 16px; }
   .hdr-nav { gap: 12px; font-size: 12px; }
+  .hdr-logo { gap: 10px; }
+  .hdr-logo-img { width: 34px; height: 34px; }
+  .hdr-logo-prefix { font-size: 12px; }
+  .hdr-logo-name { font-size: 18px; }
   .hero { padding: 50px 20px 60px; }
   .section { padding: 40px 20px 50px; }
   .tool, .wl-form { padding: 18px; }
@@ -436,5 +457,6 @@ strong { font-weight: 500; }
 }
 @media (max-width: 480px) {
   .hdr-nav { display: none; }
+  .hdr-logo-prefix { display: none; }    /* tight phone screens — only "Umzughelfer" */
   .mc-c2 { grid-template-columns: 1fr; }
 }
