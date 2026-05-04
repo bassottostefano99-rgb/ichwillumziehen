@@ -19,11 +19,11 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const auth = makeAuth(supabase);
 const consentStore = makeConsentStore({ storage: window.localStorage });
 const ADSENSE_CLIENT = 'ca-pub-5354902315482731';
-const ADSENSE_SLOT_ID = 'XXXXXXXXXX';                     // TODO: replace with real ad-unit slot ID after creating an ad unit in AdSense
+const ADSENSE_SLOT_ID = '7761109553';                     // ichwillumziehen - footer
 
 // ── Config ──────────────────────────────────────────────────────────────────
 const AFFILIATE = makeAffiliateConfig({
-  amazonTag: 'PLATZHALTER-21',           // TODO: replace with real Amazon Partnernet tag
+  amazonTag: 'ichwillumziehen-21',
   amazonEnabled: true,
 });
 
