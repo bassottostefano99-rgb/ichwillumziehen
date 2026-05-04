@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "defaults": {
+    "lebensmittel": 300,
+    "essen": 100,
+    "gym": 50,
+    "kleidung": 80,
+    "handy": 25,
+    "abos": 35,
+    "urlaub": 100,
+    "sparen": 200,
+    "sonstiges": 50,
+    "oepnv": 49
+  },
+  "tiers": {
+    "S":  { "label": "Sehr teuer", "mul": { "lebensmittel": 1.20, "essen": 1.30, "gym": 1.40 } },
+    "M":  { "label": "Teuer",      "mul": { "lebensmittel": 1.10, "essen": 1.15, "gym": 1.20 } },
+    "L":  { "label": "Mittel",     "mul": { "lebensmittel": 1.00, "essen": 1.00, "gym": 1.00 } },
+    "XL": { "label": "Günstiger",  "mul": { "lebensmittel": 0.92, "essen": 0.90, "gym": 0.80 } }
+  },
+  "cities": {
+    "München": "S",
+    "Frankfurt am Main": "S",
+    "Hamburg": "S",
+    "Stuttgart": "S",
+    "Berlin": "M",
+    "Köln": "M",
+    "Düsseldorf": "M",
+    "Heidelberg": "M",
+    "Freiburg im Breisgau": "M",
+    "Hannover": "L",
+    "Bremen": "L",
+    "Nürnberg": "L",
+    "Dresden": "L",
+    "Leipzig": "L",
+    "Mainz": "L",
+    "Karlsruhe": "L",
+    "Wiesbaden": "L",
+    "Münster": "L",
+    "Bonn": "L",
+    "Augsburg": "L",
+    "Aachen": "L",
+    "ANDERE": "XL"
+  }
+}
