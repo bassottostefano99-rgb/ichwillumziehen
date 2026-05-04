@@ -7,6 +7,10 @@
   "scripts": {
     "test": "bash -c 'for f in tests/*.test.js; do node --test \"$f\"; done'",
     "test:watch": "node --test --watch tests/",
-    "serve": "python -m http.server 5500"
+    "serve": "python -m http.server 5500",
+    "og:render": "node scripts/render-og.js"
+  },
+  "devDependencies": {
+    "puppeteer": "^23.0.0"
   }
 }

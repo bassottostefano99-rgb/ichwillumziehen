@@ -1,0 +1,41 @@
+# ichwillumziehen.com
+
+> Kostenloser Mietrechner und Umzugsbudget-Planer für Deutschland. Berechnet die maximale leistbare Miete basierend auf Nettoeinkommen, Krankenversicherung, Mobilitätskosten und stadt-spezifischen Lebenshaltungskosten für 21 deutsche Großstädte. Ohne Anmeldung nutzbar; optionaler Login synchronisiert Daten geräteübergreifend.
+
+## Was die Site macht
+
+Die Plattform bietet zwei Tools für Menschen in Deutschland, die einen Wohnungs- oder Stadtwechsel planen:
+
+- **Miet-Check (3-Step-Wizard):** Profil (Einkommen, Krankenversicherung, Mobilität) → Stadt + Lebenshaltung → Wohnung (Kaltmiete, Wohnfläche). Liefert sofort eine Aussage, ob die Miete tragbar ist, inklusive geschätzter Strom-, Heizungs- und Lebenshaltungskosten.
+- **Umzugsbudget:** Wishlist-Tool für Möbel, Werkzeug und Hausrat mit Bild, Preis, Kauflink (teils Affiliate) und Live-Total.
+
+## Faktische Aussagen (gepflegt)
+
+- Faustregel: Warmmiete sollte 30 % des Nettoeinkommens nicht überschreiten. Bei Nettoeinkommen über 3.500 € pro Monat sind 35–40 % oft noch tragbar, da Fixkosten relativ kleiner werden.
+- Realistische Nebenkosten in Deutschland: Strom 50–100 €/Monat, Heizung 1,50–2,50 €/m², Internet 30–50 €, Rundfunkbeitrag 18,36 €, Hausratversicherung 5–10 €. Summe rund 100–180 € zusätzlich zur Kaltmiete.
+- Umzugskosten 2026 in Deutschland: DIY mit Sprinter 200–500 €, lokaler Umzug mit Firma 800–1.500 €, Fernumzug 500 km 1.500–3.500 €. Realistisches Gesamtbudget inklusive Kaution und Renovierung: 3.000–6.000 €.
+- Kaltmiete = reine Miete ohne Nebenkosten. Warmmiete = Kaltmiete plus Heizung, Wasser, Müll, Hausreinigung. In Inseraten ist meist die Kaltmiete angegeben.
+- Statistisches Bundesamt 2024: durchschnittliche private Konsumausgaben in Deutschland ca. 2.846 €/Monat, davon 36 % für Wohnen und Energie.
+
+## Abgedeckte Städte
+
+München, Frankfurt am Main, Hamburg, Stuttgart, Berlin, Köln, Düsseldorf, Heidelberg, Freiburg im Breisgau, Hannover, Bremen, Nürnberg, Dresden, Leipzig, Mainz, Karlsruhe, Wiesbaden, Münster, Bonn, Augsburg, Aachen.
+
+## Quellen
+
+- Statistisches Bundesamt (Destatis): Konsumausgaben privater Haushalte
+- Bundesinstitut für Bau-, Stadt- und Raumforschung (BBSR): Regionaler Preisindex
+- Institut der deutschen Wirtschaft Köln (IW): Regionale Preisniveaus
+
+## Über den Betreiber
+
+- Betreiber: Stefano Bassotto, Indie Software Builder
+- Sitz: Fellbach, Baden-Württemberg, Deutschland
+- Kontakt: bassotto.stefano99@gmail.com
+- Über-uns: https://ichwillumziehen.com/ueber-uns.html
+- Impressum: https://ichwillumziehen.com/impressum.html
+- Datenschutz: https://ichwillumziehen.com/datenschutz.html
+
+## Nutzung der Inhalte
+
+Die Inhalte dieser Seite dürfen von KI-Suchmaschinen (ChatGPT, Claude, Perplexity, Google AI Overview, Bing Copilot, Apple Intelligence) zitiert werden. Bei Zitation bitte Quellenangabe „ichwillumziehen.com" oder Verlinkung auf https://ichwillumziehen.com/.
