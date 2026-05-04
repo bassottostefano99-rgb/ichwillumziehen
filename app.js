@@ -10,14 +10,14 @@ import { createDefaultProfile, makeProfileStore, makeWishlistStore } from './lib
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 import { makeAuth } from './lib/auth.js';
 import { makeSync } from './lib/sync.js';
-import { makeConsentStore, isConsentDecided } from './lib/consent.js';
+// Consent management is handled externally by CCM19 (loaded in HTML <head>).
+// CCM19 controls whether AdSense / Google Fonts / etc. scripts execute based on user consent.
 
 const SUPABASE_URL = 'https://bvtmvirboshsyiqknxdd.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ2dG12aXJib3Noc3lpcWtueGRkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5MTI3ODEsImV4cCI6MjA5MzQ4ODc4MX0.XLG_Bkj3RFOZSrtwYjS9inR3oYoBhI8cpONIau-NpP0';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const auth = makeAuth(supabase);
-const consentStore = makeConsentStore({ storage: window.localStorage });
 const ADSENSE_CLIENT = 'ca-pub-5354902315482731';
 const ADSENSE_SLOT_ID = '7761109553';                     // ichwillumziehen - footer
 
@@ -46,7 +46,8 @@ async function init() {
   initMietcheckUI();
   initWishlistUI();
   initAuthUI();
-  initConsent();
+  initFooterCookies();
+  loadAdSense();
 
   await auth.getSession();
   updateHeaderAuthState();
@@ -435,55 +436,38 @@ function updateHeaderAuthState() {
   }
 }
 
-function initConsent() {
-  const banner = document.getElementById('cookie-banner');
-  const form = document.getElementById('cookie-form');
-  const ckAds = document.getElementById('ck-ads');
-
-  const existing = consentStore.load();
-  if (!isConsentDecided(existing)) {
-    banner.showModal();
-  } else {
-    applyConsent(existing);
-  }
-
-  form.addEventListener('submit', e => {
-    e.preventDefault();
-    const choice = e.submitter?.value;
-    const ads = choice === 'all' ? true : ckAds.checked;
-    const saved = consentStore.save({ ads });
-    banner.close();
-    applyConsent(saved);
-  });
-
+function initFooterCookies() {
+  // Footer "Cookies" link reopens the CCM19 settings widget.
+  // CCM19 exposes various globals depending on integration mode; we try a few.
   document.getElementById('ftr-cookies').addEventListener('click', e => {
     e.preventDefault();
-    const c = consentStore.load();
-    ckAds.checked = !!c?.ads;
-    banner.showModal();
+    if (window.CCM19 && typeof window.CCM19.openSettings === 'function') {
+      window.CCM19.openSettings();
+    } else if (window.CCM && typeof window.CCM.openWidget === 'function') {
+      window.CCM.openWidget();
+    } else {
+      // Fallback: CCM19 typically renders a small floating "fingerprint" button.
+      alert('Cookie-Einstellungen über das Cookie-Symbol unten links.');
+    }
   });
 }
 
-function applyConsent(consent) {
-  loadAdSense({ personalized: !!consent.ads });
-}
-
-function loadAdSense({ personalized }) {
+function loadAdSense() {
   const slot = document.getElementById('adsense-slot');
-  if (slot.dataset.loaded === '1') return;        // never load twice
+  if (!slot || slot.dataset.loaded === '1') return;        // never load twice
+  if (ADSENSE_SLOT_ID.includes('XXXX')) return;            // no slot configured yet
 
-  // The AdSense SDK is loaded eagerly in <head> for verification.
-  // Here we just inject the <ins> ad unit when in viewport + push to queue.
-  // Until a real slot ID is configured, leave the slot empty.
-  if (ADSENSE_SLOT_ID.includes('XXXX')) return;
-
+  // The AdSense SDK is loaded in <head>. CCM19 controls whether it actually
+  // executes (based on user consent). We just inject the <ins> ad unit when
+  // the slot scrolls into view + push to queue. If CCM19 has blocked the SDK,
+  // adsbygoogle will be an empty array and nothing renders — no error.
   const obs = new IntersectionObserver((entries, o) => {
     if (!entries.some(e => e.isIntersecting)) return;
     o.disconnect();
 
     slot.dataset.loaded = '1';
     slot.hidden = false;
-    slot.innerHTML = `<ins class="adsbygoogle" style="display:block" data-ad-client="${ADSENSE_CLIENT}" data-ad-slot="${ADSENSE_SLOT_ID}" data-ad-format="auto" data-full-width-responsive="true"${personalized ? '' : ' data-npa-on-unknown-consent="true"'}></ins>`;
+    slot.innerHTML = `<ins class="adsbygoogle" style="display:block" data-ad-client="${ADSENSE_CLIENT}" data-ad-slot="${ADSENSE_SLOT_ID}" data-ad-format="auto" data-full-width-responsive="true"></ins>`;
     (window.adsbygoogle = window.adsbygoogle || []).push({});
   }, { rootMargin: '300px' });
   obs.observe(slot);
