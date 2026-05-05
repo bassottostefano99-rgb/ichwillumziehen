@@ -29,11 +29,9 @@ München, Frankfurt am Main, Hamburg, Stuttgart, Berlin, Köln, Düsseldorf, Hei
 
 ## Über den Betreiber
 
-- Betreiber: Stefano Bassotto, Indie Software Builder
-- Sitz: Fellbach, Baden-Württemberg, Deutschland
-- Kontakt: bassotto.stefano99@gmail.com
+- Indie Software Builder, betrieben in Deutschland
 - Über-uns: https://ichwillumziehen.com/ueber-uns
-- Impressum: https://ichwillumziehen.com/impressum
+- Vollständige Anbieter- und Kontaktdaten: https://ichwillumziehen.com/impressum
 - Datenschutz: https://ichwillumziehen.com/datenschutz
 
 ## Nutzung der Inhalte
